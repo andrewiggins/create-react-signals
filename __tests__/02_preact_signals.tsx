@@ -6,6 +6,8 @@ import { act } from 'react-dom/test-utils';
 import { Signal, signal } from '@preact/signals-core';
 import { createReactSignalsAdapter } from '../src/index';
 
+const delay = (ms = 0) => new Promise((r) => setTimeout(r, ms));
+
 describe('React integration', () => {
   // const { inject, getSignal } = createReactSignals<any>(
   //   function createSignal(wrapped) {
@@ -51,7 +53,7 @@ describe('React integration', () => {
     expect(scratch.innerHTML).toBe('<div>Hello World</div>');
   });
 
-  it('pass through signals as props and render & update as text', () => {
+  it('pass through signals as props and render & update as text', async () => {
     let renderCount = 0;
     function App({ name }: any) {
       return (
@@ -62,13 +64,16 @@ describe('React integration', () => {
     }
 
     const s = signal('World');
-    render(<App name={s} />, scratch);
+    act(() => {
+      render(<App name={s} />, scratch);
+    });
     expect(scratch.innerHTML).toBe('<div>Hello World! 1</div>');
 
-    act(() => {
+    await act(async () => {
       s.value = 'Preact';
+      await delay();
     });
 
-    expect(scratch.innerHTML).toBe('<div>Hello Preact! 2</div>');
+    expect(scratch.innerHTML).toBe('<div>Hello Preact! 1</div>');
   });
 });

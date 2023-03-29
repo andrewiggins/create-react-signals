@@ -359,6 +359,10 @@ export function createReactSignalsAdapter<Signal>(
       props?: Props,
       ...children: any[]
     ) => {
+      if (typeof type !== 'string') {
+        return createElementOrig(type, props, ...children);
+      }
+
       const signalsInChildren = children.flatMap((child) =>
         isSignal(child) ? [child] : [],
       );
