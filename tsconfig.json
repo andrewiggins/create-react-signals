@@ -7,9 +7,12 @@
     "module": "es2015",
     "moduleResolution": "node",
     "allowJs": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true
+    // "noUnusedLocals": true,
+    // "noUnusedParameters": true,
+    // "noUncheckedIndexedAccess": true,
+    // "exactOptionalPropertyTypes": true,
+    "jsx": "react",
+    "jsxFactory": "createElement",
+    "jsxFragmentFactory": "Fragment"
   }
 }

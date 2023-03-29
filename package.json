@@ -33,17 +33,13 @@
     "jest": "jest",
     "tsc-test": "tsc --project . --noEmit"
   },
-  "jest": {
-    "testEnvironment": "jsdom",
-    "preset": "ts-jest/presets/js-with-ts"
-  },
   "keywords": [
     "react",
     "signal"
   ],
   "license": "MIT",
-  "dependencies": {},
   "devDependencies": {
+    "@preact/signals-core": "^1.2.3",
     "@types/jest": "^29.2.6",
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
@@ -61,8 +57,8 @@
     "microbundle": "^0.15.1",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.8.3",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
     "ts-jest": "^29.0.5",
     "typescript": "^4.9.4"
   },
