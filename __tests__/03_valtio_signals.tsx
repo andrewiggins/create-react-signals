@@ -50,7 +50,7 @@ describe('React integration', () => {
     expect(scratch.innerHTML).toBe('<div>Hello World</div>');
   });
 
-  it('pass through signals as props and render as text', async () => {
+  it('pass through signals as props and render & update as text', async () => {
     let renderCount = 0;
     function App({ name }: any) {
       return (
@@ -70,5 +70,23 @@ describe('React integration', () => {
     await delay();
 
     expect(scratch.innerHTML).toBe('<div>Hello Valtio! 1</div>');
+  });
+
+  it('should update DOM props', async () => {
+    let renderCount = 0;
+    function App({ name }: any) {
+      return <div className={$(name).name}>Hello {++renderCount}</div>;
+    }
+
+    const s = proxy({ name: 'World' });
+    render(<App name={s} />, scratch);
+    expect(scratch.innerHTML).toBe('<div class="World">Hello 1</div>');
+
+    act(() => {
+      s.name = 'Valtio';
+    });
+    await delay();
+
+    expect(scratch.innerHTML).toBe('<div class="Valtio">Hello 1</div>');
   });
 });

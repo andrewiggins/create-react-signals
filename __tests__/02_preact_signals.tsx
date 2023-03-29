@@ -51,7 +51,7 @@ describe('React integration', () => {
     expect(scratch.innerHTML).toBe('<div>Hello World</div>');
   });
 
-  it('pass through signals as props and render as text', () => {
+  it('pass through signals as props and render & update as text', () => {
     let renderCount = 0;
     function App({ name }: any) {
       return (
