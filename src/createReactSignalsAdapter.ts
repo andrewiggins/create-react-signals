@@ -4,135 +4,151 @@ import type { ReactNode } from 'react';
 import { applyProps } from './applyProps';
 import type { Props } from './applyProps';
 
+type IsSignal<SignalType> = (x: unknown) => x is SignalType;
 type Unsubscribe = () => void;
-type Subscribe = (callback: () => void) => Unsubscribe;
-type GetValue = () => unknown;
-type SetValue = (path: (string | symbol)[], value: unknown) => void;
+type Subscribe<SignalType> = (
+  signal: SignalType,
+  callback: () => void,
+) => Unsubscribe;
+type GetValue<SignalType> = (signal: SignalType) => unknown;
+type SetValue<SignalType> = (
+  signal: SignalType,
+  path: (string | symbol)[],
+  value: unknown,
+) => void;
 
-export function createReactSignalsAdapter<Args extends object[]>(
-  createSignal: (...args: Args) => readonly [Subscribe, GetValue, SetValue],
-  recursive?: boolean,
-  valueProp?: string | symbol,
-  fallbackValueProp?: string | symbol,
-  handlePromise?: (promise: Promise<unknown>) => unknown,
+export function createReactSignalsAdapter<Signal>(
+  // createSignal: (...args: Args) => readonly [Subscribe, GetValue, SetValue],
+  // recursive?: boolean,
+  // valueProp?: string | symbol,
+  // fallbackValueProp?: string | symbol,
+  // handlePromise?: (promise: Promise<unknown>) => unknown,
+  createAdapter: () => readonly [
+    IsSignal<Signal>,
+    Subscribe<Signal>,
+    GetValue<Signal>,
+    SetValue<Signal>,
+  ],
 ) {
-  const SIGNAL = Symbol('REACT_SIGNAL');
-  type Signal = {
-    [SIGNAL]: readonly [Subscribe, GetValue, SetValue];
-  };
-  const isSignal = (x: unknown): x is Signal => !!(x as any)?.[SIGNAL];
+  // const SIGNAL = Symbol('REACT_SIGNAL');
+  // type Signal = {
+  //   [SIGNAL]: readonly [Subscribe, GetValue, SetValue];
+  // };
+  // const isSignal = (x: unknown): x is Signal => !!(x as any)?.[SIGNAL];
 
-  const EMPTY = Symbol();
+  // const EMPTY = Symbol();
 
-  const wrapProxy = (sub: Subscribe, get: GetValue, set: SetValue): Signal => {
-    const sig = new Proxy(
-      (() => {
-        // empty
-      }) as any,
-      {
-        get(target, prop) {
-          if (prop === SIGNAL) {
-            return [sub, get, set];
-          }
-          if (prop === valueProp) {
-            return get();
-          }
-          if (valueProp && prop === fallbackValueProp) {
-            prop = valueProp;
-          }
-          if (recursive) {
-            let value: unknown | typeof EMPTY = EMPTY;
-            return wrapProxy(
-              (callback) =>
-                sub(() => {
-                  try {
-                    const obj = get() as any;
-                    const prevValue = value;
-                    value = obj[prop];
-                    if (
-                      typeof value !== 'function' &&
-                      Object.is(prevValue, value)
-                    ) {
-                      return;
-                    }
-                  } catch (e) {
-                    // NOTE shouldn't we catch all errors?
-                  }
-                  callback();
-                }),
-              () => {
-                const obj = get() as any;
-                value = obj[prop];
-                if (typeof value === 'function') {
-                  return value.bind(obj);
-                }
-                return value;
-              },
-              (path, val) => {
-                set([prop, ...path], val);
-              },
-            );
-          }
-          return target[prop];
-        },
-        set(target, prop, value) {
-          if (prop === valueProp) {
-            set([], value);
-            return true;
-          }
-          if (!recursive) {
-            target[prop] = value;
-            return true;
-          }
-          return false;
-        },
-        apply(_target, _thisArg, args) {
-          return wrapProxy(
-            sub,
-            () => (get() as any)(...args),
-            () => {
-              throw new Error('Cannot set a value');
-            },
-          );
-        },
-      },
-    );
-    return sig;
-  };
+  // const wrapProxy = (sub: Subscribe, get: GetValue, set: SetValue): Signal => {
+  //   const sig = new Proxy(
+  //     (() => {
+  //       // empty
+  //     }) as any,
+  //     {
+  //       get(target, prop) {
+  //         if (prop === SIGNAL) {
+  //           return [sub, get, set];
+  //         }
+  //         if (prop === valueProp) {
+  //           return get();
+  //         }
+  //         if (valueProp && prop === fallbackValueProp) {
+  //           prop = valueProp;
+  //         }
+  //         if (recursive) {
+  //           let value: unknown | typeof EMPTY = EMPTY;
+  //           return wrapProxy(
+  //             (callback) =>
+  //               sub(() => {
+  //                 try {
+  //                   const obj = get() as any;
+  //                   const prevValue = value;
+  //                   value = obj[prop];
+  //                   if (
+  //                     typeof value !== 'function' &&
+  //                     Object.is(prevValue, value)
+  //                   ) {
+  //                     return;
+  //                   }
+  //                 } catch (e) {
+  //                   // NOTE shouldn't we catch all errors?
+  //                 }
+  //                 callback();
+  //               }),
+  //             () => {
+  //               const obj = get() as any;
+  //               value = obj[prop];
+  //               if (typeof value === 'function') {
+  //                 return value.bind(obj);
+  //               }
+  //               return value;
+  //             },
+  //             (path, val) => {
+  //               set([prop, ...path], val);
+  //             },
+  //           );
+  //         }
+  //         return target[prop];
+  //       },
+  //       set(target, prop, value) {
+  //         if (prop === valueProp) {
+  //           set([], value);
+  //           return true;
+  //         }
+  //         if (!recursive) {
+  //           target[prop] = value;
+  //           return true;
+  //         }
+  //         return false;
+  //       },
+  //       apply(_target, _thisArg, args) {
+  //         return wrapProxy(
+  //           sub,
+  //           () => (get() as any)(...args),
+  //           () => {
+  //             throw new Error('Cannot set a value');
+  //           },
+  //         );
+  //       },
+  //     },
+  //   );
+  //   return sig;
+  // };
 
-  const signalCache = new WeakMap();
+  // const signalCache = new WeakMap();
 
-  const getSignal = (...args: Args): unknown => {
-    let cache = signalCache;
-    for (let i = 0; i < args.length - 1; ++i) {
-      const arg = args[i] as object;
-      let nextCache = cache.get(arg);
-      if (!nextCache) {
-        nextCache = new WeakMap();
-        cache.set(arg, nextCache);
-      }
-      cache = nextCache;
-    }
-    const lastArg = args[args.length - 1] as object;
-    let sig = cache.get(lastArg);
-    if (!sig) {
-      sig = wrapProxy(...createSignal(...args));
-      cache.set(lastArg, sig);
-    }
-    return sig;
-  };
+  // const getSignal = (...args: Args): unknown => {
+  //   let cache = signalCache;
+  //   for (let i = 0; i < args.length - 1; ++i) {
+  //     const arg = args[i] as object;
+  //     let nextCache = cache.get(arg);
+  //     if (!nextCache) {
+  //       nextCache = new WeakMap();
+  //       cache.set(arg, nextCache);
+  //     }
+  //     cache = nextCache;
+  //   }
+  //   const lastArg = args[args.length - 1] as object;
+  //   let sig = cache.get(lastArg);
+  //   if (!sig) {
+  //     sig = wrapProxy(...createSignal(...args));
+  //     cache.set(lastArg, sig);
+  //   }
+  //   return sig;
+  // };
 
-  const subscribeSignal = (sig: Signal, callback: () => void) => {
-    return sig[SIGNAL][0](callback);
-  };
+  // const subscribeSignal = (sig: Signal, callback: () => void) => {
+  //   return sig[SIGNAL][0](callback);
+  // };
 
-  const readSignal = (sig: Signal) => {
-    const value = sig[SIGNAL][1]();
-    if (handlePromise && value instanceof Promise) {
-      return handlePromise(value);
-    }
-    return value;
-  };
+  // const readSignal = (sig: Signal) => {
+  //   const value = sig[SIGNAL][1]();
+  //   if (handlePromise && value instanceof Promise) {
+  //     return handlePromise(value);
+  //   }
+  //   return value;
+  // };
+
+  const [isSignal, subscribeSignal, readSignal] = createAdapter();
 
   // ----------------------------------------------------------------------
 
@@ -390,5 +406,5 @@ export function createReactSignalsAdapter<Args extends object[]>(
     return createElementInjected as typeof createElement;
   };
 
-  return { getSignal, inject };
+  return { inject };
 }
