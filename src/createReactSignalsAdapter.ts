@@ -17,6 +17,25 @@ type SetValue<SignalType> = (
   value: unknown,
 ) => void;
 
+// Updated understanding of the createReactSignals API (not my modified adapter
+// one). The createReactSignals API returns a `getSignal` function. This
+// `getSignal` function "converts/extends" the signal library's signal into a
+// React signal. Only React signals are subscribed to rerender. This limitation
+// (requiring signals to go through `getSignal` to be subscribed to rerender) is
+// why all libraries that use `createReactSignals` expose a `$` helper function
+// that is used to "unwrap" a signal (in reality, extend the signal to be
+// noticeable by createReactSignal) at the point of use.
+//
+// Our "adapter" implementation here will not use `getSignal` and instead will
+// only subscribe signals for rerendering on DOM elements. Signals will pass
+// through components untouched.
+//
+// TODO: An additional complexity we need to address though is the
+// "auto-subscription" for components that use a signal during render... For
+// comparison, create-react-signals works around this by requiring users to use
+// the `getSignal` or `$` function right before they read the signal value to
+// subscribe wherever they are in the tree to the signals value.
+
 export function createReactSignalsAdapter<Signal>(
   // createSignal: (...args: Args) => readonly [Subscribe, GetValue, SetValue],
   // recursive?: boolean,
