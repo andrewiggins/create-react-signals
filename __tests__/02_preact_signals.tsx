@@ -76,4 +76,22 @@ describe('React integration', () => {
 
     expect(scratch.innerHTML).toBe('<div>Hello Preact! 1</div>');
   });
+
+  it('should update DOM props', async () => {
+    let renderCount = 0;
+    function App({ name }: any) {
+      return <div className={name}>Hello {++renderCount}</div>;
+    }
+
+    const s = signal('World');
+    render(<App name={s} />, scratch);
+    expect(scratch.innerHTML).toBe('<div class="World">Hello 1</div>');
+
+    await act(async () => {
+      s.value = 'Valtio';
+      await delay();
+    });
+
+    expect(scratch.innerHTML).toBe('<div class="Valtio">Hello 1</div>');
+  });
 });
