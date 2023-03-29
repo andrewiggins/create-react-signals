@@ -64,10 +64,10 @@ describe('React integration', () => {
     render(<App name={s} />, scratch);
     expect(scratch.innerHTML).toBe('<div>Hello World! 1</div>');
 
-    act(() => {
+    await act(async () => {
       s.name = 'Valtio';
+      await delay();
     });
-    await delay();
 
     expect(scratch.innerHTML).toBe('<div>Hello Valtio! 1</div>');
   });
@@ -82,11 +82,37 @@ describe('React integration', () => {
     render(<App name={s} />, scratch);
     expect(scratch.innerHTML).toBe('<div class="World">Hello 1</div>');
 
-    act(() => {
+    await act(async () => {
       s.name = 'Valtio';
+      await delay();
     });
-    await delay();
 
     expect(scratch.innerHTML).toBe('<div class="Valtio">Hello 1</div>');
+  });
+
+  it('should rerender components that subscribe to a signal', async () => {
+    let renderCount = 0;
+    function App({ name }: any) {
+      const nameStr = name.name + '!';
+      return (
+        <div>
+          Hello {nameStr} {++renderCount}
+        </div>
+      );
+    }
+
+    const s = proxy({ name: 'World' });
+    act(() => {
+      // Flush useEffect that subscribes to the signal
+      render(<App name={$(s)} />, scratch);
+    });
+    expect(scratch.innerHTML).toBe('<div>Hello World! 1</div>');
+
+    await act(async () => {
+      s.name = 'Valtio';
+      await delay();
+    });
+
+    expect(scratch.innerHTML).toBe('<div>Hello Valtio! 2</div>');
   });
 });
